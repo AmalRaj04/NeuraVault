@@ -18,7 +18,13 @@ import { createHash } from "crypto";
  */
 export const storeMetadataAction: Action = {
   name: "STORE_METADATA",
-  similes: ["SAVE_DOCKING", "STORE_DOCKING", "PERSIST_DOCKING"],
+  similes: [
+    "SAVE_DOCKING",
+    "STORE_DOCKING",
+    "PERSIST_DOCKING",
+    "STORE_DATA",
+    "SAVE_DATA",
+  ],
   description:
     "Stores tagged docking metadata in database and creates a Solana blockchain integrity proof",
 

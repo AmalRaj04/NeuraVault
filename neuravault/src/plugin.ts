@@ -22,6 +22,7 @@ import {
   autoTagDockingResultAction,
   storeMetadataAction,
   queryDockingDataAction,
+  processDockingWorkflowAction,
 } from "./actions";
 
 /**
@@ -87,6 +88,7 @@ const plugin: Plugin = {
   },
   services: [],
   actions: [
+    processDockingWorkflowAction, // Primary workflow action
     parseDockingFileAction,
     autoTagDockingResultAction,
     storeMetadataAction,
