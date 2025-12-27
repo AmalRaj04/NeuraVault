@@ -70,12 +70,7 @@ export const parseDockingFileAction: Action = {
       }
 
       const responseContent: Content = {
-        text: `Parsed docking file successfully:
-- Protein: ${parsedData.protein}
-- Ligand: ${parsedData.ligand}
-- Binding Energy: ${parsedData.binding_energy} kcal/mol
-- Tool: ${parsedData.docking_tool}
-- File Hash: ${parsedData.file_hash}`,
+        text: `✓ Parsed: ${parsedData.protein} + ${parsedData.ligand}, ${parsedData.binding_energy} kcal/mol (${parsedData.docking_tool})`,
         actions: ["PARSE_DOCKING_FILE"],
         source: message.content.source,
       };

@@ -65,11 +65,7 @@ export const autoTagDockingResultAction: Action = {
       const taggedData = applyTags(parsedData);
 
       const responseContent: Content = {
-        text: `Tagged docking result:
-- Tags: ${taggedData.tags.join(", ")}
-- Confidence: ${(taggedData.confidence * 100).toFixed(1)}%
-- Binding Energy: ${taggedData.binding_energy} kcal/mol
-- Classification: ${getEnergyClassification(taggedData.binding_energy)}`,
+        text: `✓ Tagged: ${taggedData.tags.join(", ")} | Confidence: ${(taggedData.confidence * 100).toFixed(0)}%`,
         actions: ["AUTO_TAG_DOCKING_RESULT"],
         source: message.content.source,
       };

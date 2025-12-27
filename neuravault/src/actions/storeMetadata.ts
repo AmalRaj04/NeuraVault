@@ -90,11 +90,7 @@ export const storeMetadataAction: Action = {
       });
 
       const responseContent: Content = {
-        text: `Metadata stored successfully:
-- Database ID: ${finalResult.file_hash.substring(0, 16)}...
-- Solana TX: ${solana_tx || "Pending"}
-- Timestamp: ${timestamp}
-- Verification: ${solana_tx ? "Blockchain verified ✓" : "Local only"}`,
+        text: `✓ Stored | Solana TX: ${solana_tx || "Pending"} | ${solana_tx ? "Blockchain verified ✓" : "Local only"}`,
         actions: ["STORE_METADATA"],
         source: message.content.source,
       };
