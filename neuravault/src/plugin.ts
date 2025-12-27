@@ -1,4 +1,4 @@
-import type { Plugin } from '@elizaos/core';
+import type { Plugin } from "@elizaos/core";
 import {
   type Action,
   type ActionResult,
@@ -15,186 +15,55 @@ import {
   Service,
   type State,
   logger,
-} from '@elizaos/core';
-import { z } from 'zod';
+} from "@elizaos/core";
+import { z } from "zod";
+import {
+  parseDockingFileAction,
+  autoTagDockingResultAction,
+  storeMetadataAction,
+  queryDockingDataAction,
+} from "./actions";
 
 /**
- * Define the configuration schema for the plugin with the following properties:
- *
- * @param {string} EXAMPLE_PLUGIN_VARIABLE - The name of the plugin (min length of 1, optional)
- * @returns {object} - The configured schema object
+ * Define the configuration schema for NeuraVault plugin
  */
 const configSchema = z.object({
-  EXAMPLE_PLUGIN_VARIABLE: z
+  SOLANA_RPC_URL: z
     .string()
-    .min(1, 'Example plugin variable is not provided')
+    .url()
     .optional()
     .transform((val) => {
       if (!val) {
-        console.warn('Warning: Example plugin variable is not provided');
+        console.warn(
+          "Warning: SOLANA_RPC_URL not provided. Blockchain proofs will be disabled."
+        );
+      }
+      return val;
+    }),
+  SOLANA_PRIVATE_KEY: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) {
+        console.warn(
+          "Warning: SOLANA_PRIVATE_KEY not provided. Blockchain proofs will be disabled."
+        );
       }
       return val;
     }),
 });
 
-/**
- * Example HelloWorld action
- * This demonstrates the simplest possible action structure
- */
-/**
- * Represents an action that responds with a simple hello world message.
- *
- * @typedef {Object} Action
- * @property {string} name - The name of the action
- * @property {string[]} similes - The related similes of the action
- * @property {string} description - Description of the action
- * @property {Function} validate - Validation function for the action
- * @property {Function} handler - The function that handles the action
- * @property {Object[]} examples - Array of examples for the action
- */
-const helloWorldAction: Action = {
-  name: 'HELLO_WORLD',
-  similes: ['GREET', 'SAY_HELLO'],
-  description: 'Responds with a simple hello world message',
-
-  validate: async (_runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
-    // Always valid
-    return true;
-  },
-
-  handler: async (
-    _runtime: IAgentRuntime,
-    message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
-    _responses: Memory[]
-  ): Promise<ActionResult> => {
-    try {
-      logger.info('Handling HELLO_WORLD action');
-
-      // Simple response content
-      const responseContent: Content = {
-        text: 'hello world!',
-        actions: ['HELLO_WORLD'],
-        source: message.content.source,
-      };
-
-      // Call back with the hello world message
-      await callback(responseContent);
-
-      return {
-        text: 'Sent hello world greeting',
-        values: {
-          success: true,
-          greeted: true,
-        },
-        data: {
-          actionName: 'HELLO_WORLD',
-          messageId: message.id,
-          timestamp: Date.now(),
-        },
-        success: true,
-      };
-    } catch (error) {
-      logger.error({ error }, 'Error in HELLO_WORLD action:');
-
-      return {
-        text: 'Failed to send hello world greeting',
-        values: {
-          success: false,
-          error: 'GREETING_FAILED',
-        },
-        data: {
-          actionName: 'HELLO_WORLD',
-          error: error instanceof Error ? error.message : String(error),
-        },
-        success: false,
-        error: error instanceof Error ? error : new Error(String(error)),
-      };
-    }
-  },
-
-  examples: [
-    [
-      {
-        name: '{{name1}}',
-        content: {
-          text: 'Can you say hello?',
-        },
-      },
-      {
-        name: '{{name2}}',
-        content: {
-          text: 'hello world!',
-          actions: ['HELLO_WORLD'],
-        },
-      },
-    ],
-  ],
-};
-
-/**
- * Example Hello World Provider
- * This demonstrates the simplest possible provider implementation
- */
-const helloWorldProvider: Provider = {
-  name: 'HELLO_WORLD_PROVIDER',
-  description: 'A simple example provider',
-
-  get: async (
-    _runtime: IAgentRuntime,
-    _message: Memory,
-    _state: State
-  ): Promise<ProviderResult> => {
-    return {
-      text: 'I am a provider',
-      values: {},
-      data: {},
-    };
-  },
-};
-
-export class StarterService extends Service {
-  static serviceType = 'starter';
-  capabilityDescription =
-    'This is a starter service which is attached to the agent through the starter plugin.';
-
-  constructor(runtime: IAgentRuntime) {
-    super(runtime);
-  }
-
-  static async start(runtime: IAgentRuntime) {
-    logger.info('*** Starting starter service ***');
-    const service = new StarterService(runtime);
-    return service;
-  }
-
-  static async stop(runtime: IAgentRuntime) {
-    logger.info('*** Stopping starter service ***');
-    // get the service from the runtime
-    const service = runtime.getService(StarterService.serviceType);
-    if (!service) {
-      throw new Error('Starter service not found');
-    }
-    service.stop();
-  }
-
-  async stop() {
-    logger.info('*** Stopping starter service instance ***');
-  }
-}
-
 const plugin: Plugin = {
-  name: 'starter',
-  description: 'A starter plugin for Eliza',
-  // Set lowest priority so real models take precedence
-  priority: -1000,
+  name: "neuravault",
+  description:
+    "NeuraVault - Data management plugin for molecular docking results",
+  priority: 100,
   config: {
-    EXAMPLE_PLUGIN_VARIABLE: process.env.EXAMPLE_PLUGIN_VARIABLE,
+    SOLANA_RPC_URL: process.env.SOLANA_RPC_URL,
+    SOLANA_PRIVATE_KEY: process.env.SOLANA_PRIVATE_KEY,
   },
   async init(config: Record<string, string>) {
-    logger.info('*** Initializing starter plugin ***');
+    logger.info("*** Initializing NeuraVault plugin ***");
     try {
       const validatedConfig = await configSchema.parseAsync(config);
 
@@ -202,10 +71,13 @@ const plugin: Plugin = {
       for (const [key, value] of Object.entries(validatedConfig)) {
         if (value) process.env[key] = value;
       }
+
+      logger.info("NeuraVault plugin initialized successfully");
     } catch (error) {
       if (error instanceof z.ZodError) {
         const errorMessages =
-          error.issues?.map((e) => e.message)?.join(', ') || 'Unknown validation error';
+          error.issues?.map((e) => e.message)?.join(", ") ||
+          "Unknown validation error";
         throw new Error(`Invalid plugin configuration: ${errorMessages}`);
       }
       throw new Error(
@@ -213,73 +85,14 @@ const plugin: Plugin = {
       );
     }
   },
-  models: {
-    [ModelType.TEXT_SMALL]: async (
-      _runtime,
-      { prompt, stopSequences = [] }: GenerateTextParams
-    ) => {
-      return 'Never gonna give you up, never gonna let you down, never gonna run around and desert you...';
-    },
-    [ModelType.TEXT_LARGE]: async (
-      _runtime,
-      {
-        prompt,
-        stopSequences = [],
-        maxTokens = 8192,
-        temperature = 0.7,
-        frequencyPenalty = 0.7,
-        presencePenalty = 0.7,
-      }: GenerateTextParams
-    ) => {
-      return 'Never gonna make you cry, never gonna say goodbye, never gonna tell a lie and hurt you...';
-    },
-  },
-  routes: [
-    {
-      name: 'helloworld',
-      path: '/helloworld',
-      type: 'GET',
-      handler: async (_req: RouteRequest, res: RouteResponse) => {
-        // send a response
-        res.json({
-          message: 'Hello World!',
-        });
-      },
-    },
+  services: [],
+  actions: [
+    parseDockingFileAction,
+    autoTagDockingResultAction,
+    storeMetadataAction,
+    queryDockingDataAction,
   ],
-  events: {
-    MESSAGE_RECEIVED: [
-      async (params) => {
-        logger.info('MESSAGE_RECEIVED event received');
-        // print the keys
-        logger.info({ keys: Object.keys(params) }, 'MESSAGE_RECEIVED param keys');
-      },
-    ],
-    VOICE_MESSAGE_RECEIVED: [
-      async (params) => {
-        logger.info('VOICE_MESSAGE_RECEIVED event received');
-        // print the keys
-        logger.info({ keys: Object.keys(params) }, 'VOICE_MESSAGE_RECEIVED param keys');
-      },
-    ],
-    WORLD_CONNECTED: [
-      async (params) => {
-        logger.info('WORLD_CONNECTED event received');
-        // print the keys
-        logger.info({ keys: Object.keys(params) }, 'WORLD_CONNECTED param keys');
-      },
-    ],
-    WORLD_JOINED: [
-      async (params) => {
-        logger.info('WORLD_JOINED event received');
-        // print the keys
-        logger.info({ keys: Object.keys(params) }, 'WORLD_JOINED param keys');
-      },
-    ],
-  },
-  services: [StarterService],
-  actions: [helloWorldAction],
-  providers: [helloWorldProvider],
+  providers: [],
 };
 
 export default plugin;
