@@ -24,6 +24,7 @@ import {
   queryDockingDataAction,
   processDockingWorkflowAction,
 } from "./actions";
+import { availableActionsProvider } from "./providers/availableActionsProvider";
 
 /**
  * Define the configuration schema for NeuraVault plugin
@@ -91,7 +92,7 @@ const plugin: Plugin = {
     processDockingWorkflowAction, // Primary workflow - handles parse, tag, store
     queryDockingDataAction, // Query stored data
   ],
-  providers: [],
+  providers: [availableActionsProvider],
 };
 
 export default plugin;
