@@ -1,6 +1,35 @@
+# Dependencies
 node_modules/
+neuravault/node_modules/
+
+# Build outputs
 dist/
+neuravault/dist/
+*.tsbuildinfo
+
+# Environment
 .env
-data/
+.env.local
+neuravault/.env
+
+# Database
 *.db
+.eliza/
+neuravault/.eliza/
+
+# Logs
 *.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Bun
+bun.lock
