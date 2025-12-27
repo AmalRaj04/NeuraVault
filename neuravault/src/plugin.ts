@@ -88,11 +88,8 @@ const plugin: Plugin = {
   },
   services: [],
   actions: [
-    processDockingWorkflowAction, // Primary workflow action
-    parseDockingFileAction,
-    autoTagDockingResultAction,
-    storeMetadataAction,
-    queryDockingDataAction,
+    processDockingWorkflowAction, // Primary workflow - handles parse, tag, store
+    queryDockingDataAction, // Query stored data
   ],
   providers: [],
 };
