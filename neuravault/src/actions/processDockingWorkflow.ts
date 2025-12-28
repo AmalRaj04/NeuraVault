@@ -96,14 +96,14 @@ export const processDockingWorkflowAction: Action = {
         solana_tx: null,
       };
 
-      // Store in memory
+      // Store in memory (simplified - just store in content)
       await runtime.createMemory({
         id: randomUUID(),
         entityId: message.entityId,
         roomId: message.roomId,
         content: {
-          type: "docking_result",
-          data: result,
+          text: `Stored: ${result.protein} + ${result.ligand}, ${result.binding_energy} kcal/mol`,
+          docking_result: result,
         },
       });
 

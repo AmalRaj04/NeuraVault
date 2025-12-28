@@ -249,15 +249,14 @@ async function queryDatabase(
       (m) =>
         m.content &&
         typeof m.content === "object" &&
-        "type" in m.content &&
-        m.content.type === "docking_result"
+        "docking_result" in m.content
     );
 
     // Extract docking results
     let results: DockingResult[] = dockingMemories
       .map((m) => {
         const content = m.content as any;
-        return content.data as DockingResult;
+        return content.docking_result as DockingResult;
       })
       .filter((r) => r !== null && r !== undefined);
 
