@@ -8,7 +8,7 @@ import type {
   State,
 } from "@elizaos/core";
 import { logger } from "@elizaos/core";
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import type { DockingResult } from "../types";
 
 /**
@@ -98,7 +98,7 @@ export const processDockingWorkflowAction: Action = {
 
       // Store in memory
       await runtime.createMemory({
-        id: runtime.generateId(),
+        id: randomUUID(),
         entityId: message.entityId,
         roomId: message.roomId,
         content: {

@@ -13,11 +13,8 @@ export const character: Character = {
     // Core plugins first
     "@elizaos/plugin-sql",
 
-    // OpenRouter for text generation (fast, reliable)
-    "@elizaos/plugin-openrouter",
-
-    // OpenAI for embeddings (via OpenRouter)
-    "@elizaos/plugin-openai",
+    // Ollama (free, local AI)
+    "@elizaos/plugin-ollama",
 
     // Platform plugins
     ...(process.env.DISCORD_API_TOKEN?.trim()
