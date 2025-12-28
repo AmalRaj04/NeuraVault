@@ -237,28 +237,15 @@ async function queryDatabase(
   filters: QueryFilters
 ): Promise<DockingResult[]> {
   try {
-    // Get all docking results from memory
-    const memories = await runtime.getMemories({
-      tableName: "memories",
-      roomId: runtime.agentId,
-      count: 100,
-    });
+    // Get results from in-memory storage (demo mode)
+    const allResults: DockingResult[] = (global as any).dockingResults || [];
 
-    // Filter memories that contain docking results
-    const dockingMemories = memories.filter(
-      (m) =>
-        m.content &&
-        typeof m.content === "object" &&
-        "docking_result" in m.content
-    );
+    if (allResults.length === 0) {
+      logger.info("No docking results found in memory");
+      return [];
+    }
 
-    // Extract docking results
-    let results: DockingResult[] = dockingMemories
-      .map((m) => {
-        const content = m.content as any;
-        return content.docking_result as DockingResult;
-      })
-      .filter((r) => r !== null && r !== undefined);
+    let results = [...allResults];
 
     // Apply filters
     if (filters.protein) {

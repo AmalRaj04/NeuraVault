@@ -96,16 +96,12 @@ export const processDockingWorkflowAction: Action = {
         solana_tx: null,
       };
 
-      // Store in memory (simplified - just store in content)
-      await runtime.createMemory({
-        id: randomUUID(),
-        entityId: message.entityId,
-        roomId: message.roomId,
-        content: {
-          text: `Stored: ${result.protein} + ${result.ligand}, ${result.binding_energy} kcal/mol`,
-          docking_result: result,
-        },
-      });
+      // Store in memory (in-memory for demo - no database)
+      // In production, this would use proper database storage
+      if (!global.dockingResults) {
+        global.dockingResults = [];
+      }
+      global.dockingResults.push(result);
 
       // Create Solana proof (mock for now)
       const metadataHash = createHash("sha256")
@@ -174,8 +170,12 @@ function parseDockingContent(content: string): any {
   const ligandMatch = content.match(/ligand[:\s]+(\w+)/i);
   const ligand = ligandMatch ? ligandMatch[1] : "UNKNOWN";
 
+  // Try multiple energy patterns
   const energyMatch =
-    content.match(/([-\d.]+)\s*kcal/i) || content.match(/\s+1\s+([-\d.]+)/);
+    content.match(/energy[:\s]+([-\d.]+)/i) || // "energy: -8.5" or "energy -8.5"
+    content.match(/([-\d.]+)\s*kcal/i) || // "-8.5 kcal/mol"
+    content.match(/affinity\s*=\s*([-\d.]+)/i) || // "Affinity = -8.5"
+    content.match(/\s+1\s+([-\d.]+)/); // Vina table format
   const binding_energy = energyMatch ? parseFloat(energyMatch[1]) : 0;
 
   const docking_tool = content.includes("Vina")
